@@ -1,0 +1,20 @@
+{
+  "name": "xyz-hackweek",
+  "version": "0.0.1",
+  "maintainers": [
+    {
+      "name": "Marvin Gilbert",
+      "email": "marvin.gilbert@here.com"
+    },
+    {
+      "name": "Maximilian Chrzan",
+      "email": "Maximilian.Chrzan@here.com"
+    }
+  ],
+  "dependencies": {
+    "node_common": "latest",
+    "request": "^2.87.0"
+  },
+  "main": "./index.js",
+  "license": "UNLICENSED"
+}

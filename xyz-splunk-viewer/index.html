@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+	<meta name="author" content="Maximilian Chrzan">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>Splunk Viewer</title>
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">	
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+	<!-- jquery -->
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>>
+
+	<!-- leaflet -->
+	<script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js"></script>
+
+	<!-- Main tangram library -->
+	<script src="https://unpkg.com/tangram/dist/tangram.min.js"></script>
+		
+	<style>
+		@font-face { font-family: 'here-font'; src: url('FiraSans-Light.ttf') format('truetype'); }
+
+		body {
+			font-family: sans-serif;
+			margin: 0px;
+			border: 0px;
+			padding: 0px;
+			color: #48dad0;
+			font-family: here-font;
+		}
+
+		.appName {
+			font-size: 20px;
+			width: 150px;
+			display: table-cell;
+			vertical-align: middle;
+			padding-left: 15px;
+			text-align: center;
+		}
+
+		.container {
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			position: absolute;
+			z-index: 0;
+		}
+
+		.header {
+			position: absolute;
+			text-align: center;
+			vertical-align: middle;
+			height: 50px;
+			top: 15px;
+			left: 50px;
+			padding-top: 5px;
+			padding-left: 15px;
+			padding-right: 15px;
+			right: 0;
+			z-index: 1;
+			background-color: #0f1621;
+			opacity: 0.65;     
+			-moz-opacity: 0.65;
+			display: table;
+			width: 100%;
+			min-width: 1000px;
+			text-align: left;
+		}
+
+		.header_in{
+			display: table-cell;
+			vertical-align: middle;
+			padding-left: 15px;
+		}
+
+		.hour_display{
+			display:inline;
+		}
+
+		#map {
+			height: 100%;
+			width: 100%;
+		}
+
+		#autoPlayButton {
+			background-color: #888888;
+			color: #000000;
+			border-radius: 2px;
+			font-size: 16px;
+		}
+		#helpButton {
+			background-color: #74DF00;
+			color: #000000;
+			border-radius: 2px;
+			font-size: 16px;
+		}
+    </style>
+  </head>
+
+  <body>
+    <div class="header"> 
+		<img src="here-logo.svg" height="45px"/>
+		<div class="appName">XYZ Splunk Viewer</div> 
+		<div class="header_in">       			
+			Log: <select name="baseMapControlChoice" size="1" onchange="setBaseMapProvider('');">
+					<option value="xyz_osm_tiles" SELECTED>xyz_osm_tiles</option>
+					<option value="fancy_other_log">...</option>
+					<option value="fancy_other_log">...</option>
+				</select> 
+			Day: <input type="text" id="datepicker"> 
+			Hour [<p class="hour_display" id="hour_display">0-24</p>]: <input id="slider" type="range" min="1" max="24" step="1" onChange="createTags()" >
+			<button type="button" id="autoPlayButton" onclick="autoPlay()">AutoPlay Hours</button>		
+			Here-Offices:<input type="checkbox" name="activateBgColor" onclick="toggleOfficeLayer();">
+			<button type="button" id="helpButton" onclick="window.open('help.html', 'Help', 'width=600,height=600,resizable=yes,left=0,top=100,scrollbars=yes');" title="Get some help..">Help</button>
+		</div>
+    </div>
+    <div class="container">
+        <div id="map"></div>
+    </div>
+
+    <script>
+		var sliderCnt=0;
+		var autoIsActive=false;
+		var toggleVal=false;
+
+		var map = L.map('map', {maxZoom: 14, minZoom: 3});
+		let timerId;
+
+		var tangram_layer = Tangram.leafletLayer({
+			scene: 'splunk_scene.yaml',
+			attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | Map data &copy; <a href="http://openstreetmap.org">OSM contributors</a>',
+		});
+
+		tangram_layer.addTo(map);
+		map.setView([50, 8], 3);
+
+		function createTags() {
+			var hour = sliderCnt = parseInt(document.getElementById("slider").value);
+			var dateObject = $("#datepicker").datepicker("getDate");
+			var curDateString = $.datepicker.formatDate("yy-mm-dd", dateObject);
+
+			document.getElementById('hour_display').innerHTML = hour;
+
+			if(hour < 10)
+				hour = '0'+hour;
+			
+			updateSource("date:"+curDateString+"+hour:"+hour);		
+		}
+
+		function updateSource(tags) {
+			tangram_layer.scene.setDataSource("xyz_splunk", { 
+				type: "GeoJSON",
+				url: "https://xyz.api.here.com/hub/spaces/ZxNrIOmO/tile/web/{z}_{x}_{y}",
+				url_params: {
+					"access_token": "....",
+					"tags": tags,
+					"clip": true
+				}
+			});
+		}
+
+		function autoPlay() {
+			autoIsActive = autoIsActive == false ? true : false;
+			if(autoIsActive){
+
+				if($("#datepicker").datepicker("getDate") == null){
+					alert("Please choose a day before!");
+					autoIsActive = false;
+					return;
+				}
+				
+				timerId = setInterval(() => 
+				{
+					sliderCnt = (sliderCnt == 24 ? 1 : sliderCnt=sliderCnt+1);
+					document.getElementById("slider").value = ''+sliderCnt; 
+					createTags();	
+				}, 3000);	
+
+				$("#autoPlayButton").css('background-color','#48dad0');
+			}else{
+				clearInterval(timerId);
+				$("#autoPlayButton")
+					.css('background-color','#888888')
+					.css('color','#000000');
+			}
+		}
+
+		$(function() {
+			$("#datepicker")
+				.datepicker({ dateFormat: "yy-mm-dd",  minDate: "2018-08-20", maxDate: "2018-08-31" })
+				.change(function() {               	      		
+					createTags();
+				});
+		});
+
+		function toggleOfficeLayer(){
+			if(autoIsActive == true)
+				autoPlay();
+
+			toggleVal = toggleVal == true ? false : true;
+
+			map.removeLayer(tangram_layer);
+			tangram_layer = Tangram.leafletLayer({
+				scene: toggleVal == true ? 'offices_splunk_scene.yaml' : 'splunk_scene.yaml',
+				attribution: ''
+			});
+			map.addLayer(tangram_layer);
+		}
+    </script>
+  </body>
+</html>

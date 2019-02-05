@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+	<title>XYZ Splunk Viewer - Help</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+			padding: 0;
+			font-size: 14px;
+			background-color: #ffffff;
+		}
+	</style>
+</head>
+
+<body text="#000000" bgcolor="#FFFFFF" link="#FF0000" alink="#FF0000" vlink="#FF0000">
+
+	<h3>XYZ Splunk Viewer</h3>
+	<h4>Idea</h4>
+	<ul>
+		<li>To build a generic application which can be used for a continuous visualization of Splunk logs which are containing
+			geo-related data.</li>
+	</ul>
+
+	<h4>What do you see?</h4>
+	<ul>
+		<li>We have chosen the xyz-osm-base logs as an example dataset. Every point on the map displays accessed xyz-osm-base
+			tiles. So you are able to get a feeling which regions were the hotspots of our hackweek.
+			<i>Due to the reason that we have a front-cache in place you can only see requested tiles from cache-misses.</i></li>
+	</ul>
+
+	<h4>Controls?</h4>
+	<ul>
+		<li>Log: Choose Log-Source (placeholder)</li>
+		<li>Day: Choose the day from which you want to see the log-data</li>
+		<li>Hour: Choose the hour from which you want to see the log-data</li>
+		<li>AutoPlay: If it is activated, the time-slider iterates (3s interval) through the chosen day timeframe
+			automatically</li>
+		<li>HERE-Offices: Enable/Disable the visualization of the biggest HERE-Offices</li>
+	</ul>
+
+	<h4>Components</h4>
+	<ul>
+		<li><b>Data-Loader (Node-Script running as Lambda):</b><br>
+			The data-loader is running as a Lambda function in AWS. It is frequently requesting log-data from our HERE-Splunk
+			Server.
+			It processes pre-defined Splunk-Searches which have to return geo-related data. For each Splunk-Search is a regular
+			expression defined
+			which parses the geolocation and some attributes of interest. Finally those pre-processed datasets get uploaded into a
+			XYZ-Space.
+		</li>
+		<li><b>XYZ-Splunk Viewer</b>:<br>The UI-Component of the project. It uses Tangram and Leaflet to visualize the
+			xyz-spaces which provides the data.</li>
+	</ul>
+
+	<h4>Used Technologies</h4>
+	<ul>
+		<li>HERE-Splunk-Server, AWS-Lambda, AWS-S3, XYZ-Spaces, Tangram, Leaflet, Nodejs, Javascript</li>
+	</ul>
+
+	<h4>Team</h4>
+	<ul>
+		<li>Marvin Gilbert, Maximilian Chrzan</li>
+	</ul>
+
+</body>
+
+</html>

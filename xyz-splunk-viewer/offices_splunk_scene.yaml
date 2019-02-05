@@ -1,0 +1,43 @@
+import:
+    - https://www.nextzen.org/carto/refill-style/refill-style.zip
+    - https://s3.amazonaws.com/xyz-demo/data/demo.yaml
+    - https://www.nextzen.org/carto/refill-style/themes/label-5.zip
+
+sources:
+    xyz_here_offices:
+        url: https://xyz.api.here.com/hub/spaces/1CMt4mJM/tile/web/{z}_{x}_{y}        
+        url_params:
+            access_token: ... 
+            clip: true
+        type: GeoJSON
+    xyz_splunk:
+        url: https://xyz.api.here.com/hub/spaces/ZxNrIOmO/tile/web/{z}_{x}_{y}
+        url_params:
+            access_token: ... 
+            clip: true
+        type: GeoJSON
+
+layers:
+    xyz_here_offices:
+        enabled: true
+        data: {source: xyz_here_offices}
+        filter: function(){return feature.employees > 50}
+        draw: 
+            points:
+                collide: false
+                color: [0.855, 0.188, 0.188, 0.5]
+                size: 40px
+                outline:
+                    width: 2px
+                    color: '#0f1621'
+    xyz_splunk:
+        enabled: true
+        data: {source: xyz_splunk}
+        draw: 
+            points:
+                collide: false
+                color: [0, 0, 0, .5]
+                size: 15
+                outline:
+                    width: 1px
+                    color: '#48dad0'
